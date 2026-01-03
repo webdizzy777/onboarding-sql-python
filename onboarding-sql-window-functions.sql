@@ -11,3 +11,7 @@ SELECT application_id, entity_type, application_submitted_at FROM (SELECT applic
 -- 3) Running total of applications by day:
 -- Group by submission date (date only), then add a running total of applications over time.
 SELECT submission_date, number_of_applications_by_date, sum(number_of_applications_by_date) OVER(ORDER BY submission_date ASC) as running_total_by_date FROM (SELECT DATE(application_submitted_at) as submission_date, COUNT(*) as number_of_applications_by_date FROM onboarding-practice-sql-python.onboarding.applications GROUP BY submission_date);
+
+-- 4) Time-to-decision compared to entity average:
+-- For each application, return application_id, entity_type, hours_to_decision, avg_hours_for_entity_type, and difference_from_avg.
+SELECT application_id, entity_type, hours_to_decision, avg_hours_for_entity_type, (hours_to_decision - avg_hours_for_entity_type) as difference_from_avg FROM (SELECT application_id, entity_type, hours_to_decision, avg(hours_to_decision) OVER(PARTITION BY entity_type) as avg_hours_for_entity_type FROM (SELECT application_id, entity_type, TIMESTAMP_DIFF(final_decision_at, application_submitted_at, HOUR) as hours_to_decision FROM onboarding-practice-sql-python.onboarding.applications) as t1) as t2;
