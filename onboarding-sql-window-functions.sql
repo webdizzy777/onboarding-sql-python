@@ -15,3 +15,7 @@ SELECT submission_date, number_of_applications_by_date, sum(number_of_applicatio
 -- 4) Time-to-decision compared to entity average:
 -- For each application, return application_id, entity_type, hours_to_decision, avg_hours_for_entity_type, and difference_from_avg.
 SELECT application_id, entity_type, hours_to_decision, avg_hours_for_entity_type, (hours_to_decision - avg_hours_for_entity_type) as difference_from_avg FROM (SELECT application_id, entity_type, hours_to_decision, avg(hours_to_decision) OVER(PARTITION BY entity_type) as avg_hours_for_entity_type FROM (SELECT application_id, entity_type, TIMESTAMP_DIFF(final_decision_at, application_submitted_at, HOUR) as hours_to_decision FROM onboarding-practice-sql-python.onboarding.applications) as t1) as t2;
+
+-- 5) Top 3 slowest per entity type:
+-- Return the 3 slowest applications per entity_type with application_id, entity_type, hours_to_decision, and row_number (or rank).
+SELECT application_id, entity_type, hours_to_decision, rank_in_entity FROM (SELECT application_id, entity_type, hours_to_decision, ROW_NUMBER() OVER(PARTITION BY entity_type ORDER BY hours_to_decision DESC) as rank_in_entity FROM (SELECT application_id, entity_type, hours_to_decision FROM (SELECT application_id, entity_type, TIMESTAMP_DIFF(final_decision_at, application_submitted_at, HOUR) as hours_to_decision FROM onboarding-practice-sql-python.onboarding.applications))) WHERE rank_in_entity < 4;
